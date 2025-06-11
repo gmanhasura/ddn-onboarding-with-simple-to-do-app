@@ -7,9 +7,7 @@ from typing import Optional
 import os
 
 # Set your DATABASE_URL or read from environment
-# DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:yourpassword@localhost:5432/yourdb")
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://neondb_owner:k0sWi6tGuLOV@noisy-thunder-80402718.us-west-2.aws.neon.tech/v2-simple-to-do-gm_db_8492381?options=project%3Dnoisy-thunder-80402718&sslmode=require")
-
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:yourpassword@localhost:5432/yourdb")
 engine = create_engine(
     DATABASE_URL,
     pool_size=5,         # avoid high values in serverless environments

@@ -10,6 +10,7 @@
 **Run Python FastAPI server**
 
 * Install the python modules as required by the imports inside python/todo\_fastapi.py using “pip install”  
+* modify the database URL in python/todo\_fastapi.py to point to the postgres database
 * Run the fastapi server using the command  
   * uvicorn todo\_fastapi:app \--reload
 
