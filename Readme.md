@@ -24,6 +24,7 @@
   * ddn subgraph init http \--dir http \--target-supergraph ./supergraph.yaml  
 * Edit the subgraph.yaml file in each of these subgraphs to add unique prefixes.   
   * Example: for postgres subgraph, you can add prefixes like this  
+  ```yaml
     kind: Subgraph  
     version: v2  
     definition:  
@@ -33,7 +34,8 @@
        graphqlRootFieldPrefix: postgres\_  
        graphqlTypeNamePrefix: Postgres\_  
        namingConvention: graphql  
-  * Configure unique prefixes for the other two subgraphs  
+   
+* Configure unique prefixes for the other two subgraphs  
 * Create postgres connector under postgres subgraph  
   * ddn context set subgraph postgres/subgraph.yaml  
   * ddn connector init \-i todopg  
@@ -61,9 +63,11 @@
   *  ddn context set subgraph http/subgraph.yaml  
   *  ddn connector init \-i todohttp  
   *  Add the following lines in config.yaml under connector folder  
+  ```yaml
      files:  
-     \- file: http://127.0.0.1:8000/openapi.json  
+     - file: http://127.0.0.1:8000/openapi.json  
        spec: oas3  
+   ```    
   *   ddn connector introspect todohttp  
     * This step will prompt for configuring an environment variable for SERVER\_URL  
   *  ddn connector env add \--env SERVER\_URL=http://host.docker.internal:8000 \--connector ./http/connector/todohttp/connector.yaml  
