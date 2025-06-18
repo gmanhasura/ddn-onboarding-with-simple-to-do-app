@@ -1,0 +1,163 @@
+kind: DataConnectorLink
+version: v1
+definition:
+  name: blogicty
+  url:
+    readWriteUrls:
+      read:
+        valueFromEnv: BLOGIC_BLOGICTY_READ_URL
+      write:
+        valueFromEnv: BLOGIC_BLOGICTY_WRITE_URL
+  headers:
+    Authorization:
+      valueFromEnv: BLOGIC_BLOGICTY_AUTHORIZATION_HEADER
+  schema:
+    version: v0.1
+    schema:
+      scalar_types:
+        Boolean:
+          representation:
+            type: boolean
+          aggregate_functions: {}
+          comparison_operators:
+            _eq:
+              type: equal
+        Float:
+          representation:
+            type: float64
+          aggregate_functions: {}
+          comparison_operators:
+            _eq:
+              type: equal
+        JSON:
+          representation:
+            type: json
+          aggregate_functions: {}
+          comparison_operators: {}
+        String:
+          representation:
+            type: string
+          aggregate_functions: {}
+          comparison_operators:
+            _eq:
+              type: equal
+      object_types:
+        HeadersResponse<string>:
+          fields:
+            headers:
+              type:
+                name: JSON
+                type: named
+            response:
+              type:
+                name: String
+                type: named
+      collections: []
+      functions:
+        - name: uuid
+          arguments: {}
+          result_type:
+            name: String
+            type: named
+        - name: capitalise
+          arguments:
+            text:
+              type:
+                name: String
+                type: named
+          result_type:
+            name: String
+            type: named
+        - name: updateResource
+          arguments:
+            userRole:
+              type:
+                name: String
+                type: named
+          result_type:
+            name: Boolean
+            type: named
+        - name: createResource
+          arguments:
+            existingIds:
+              type:
+                element_type:
+                  name: String
+                  type: named
+                type: array
+            id:
+              type:
+                name: String
+                type: named
+          result_type:
+            name: Boolean
+            type: named
+        - name: divide
+          arguments:
+            x:
+              type:
+                name: Float
+                type: named
+            "y":
+              type:
+                name: Float
+                type: named
+          result_type:
+            name: Float
+            type: named
+        - name: forwardedHeader
+          arguments:
+            headers:
+              type:
+                name: JSON
+                type: named
+            name:
+              type:
+                name: String
+                type: named
+          result_type:
+            name: String
+            type: named
+        - name: returnHeader
+          arguments:
+            headers:
+              type:
+                name: JSON
+                type: named
+          result_type:
+            name: HeadersResponse<string>
+            type: named
+      procedures:
+        - name: encode
+          description: |-
+            Encode a given string in base 64
+            NDC Procedure: As this is missing the readonly tag, this function will be exposed as a mutation in the API)
+          arguments:
+            username:
+              type:
+                name: String
+                type: named
+          result_type:
+            name: String
+            type: named
+    capabilities:
+      version: 0.1.6
+      capabilities:
+        query:
+          variables: {}
+          nested_fields: {}
+        mutation: {}
+  argumentPresets:
+    - argument: headers
+      value:
+        httpHeaders:
+          forward:
+            - x-header-1
+            - x-header-2
+          additional: {}
+  responseHeaders:
+    headersField: headers
+    resultField: response
+    forwardHeaders:
+      - x-response-header-1
+      - x-response-header-2
