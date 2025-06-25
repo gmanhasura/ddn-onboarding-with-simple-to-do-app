@@ -147,7 +147,98 @@
   * ddn console –local  
   * Exercise the newly exposed query returnHeader and observe the response which includes the new http headers added by the function inside the code
 
-Documentation
+**CI/CD Pipeline Setup**
+
+* Setup github repository for the local ddn project ‘ddn-todo-bicevida’  
+  * echo "\# ddn-todo-bicevida" \>\> [README.md](http://README.md)  
+  * git init  
+  * git add .  
+  * git commit \-m "first commit"  
+  * git branch \-M main  
+  * git remote add origin https://github.com/\<github-account\>/ddn-todo-bicevida.git  
+  * git push \-u origin main  
+* Create branches dev, staging, prod derived from the main branch  
+* Create a feature branch ‘dev-yourname’ derived from dev branch  
+* Create a project for development  
+  * ddn context set-context default   
+  * ddn project init ddn-todo-bicevida-dev  
+  * ddn supergraph build create  
+    * Note down the \<build-version\> from the output  
+  * ddn supergraph build apply \<build-version\>  
+  * ddn console  
+  * Explore the development project on the console  
+  * Create a service account from project settings and save the token  
+    * Name: cicd  
+    * Copy token and save it safely  
+    * Set access level ‘Admin’  
+    * Create a github secret with name ‘HASURA\_DEV\_PAT’  
+* Create a project for staging  
+  * ddn context create-context staging  
+  * ddn context set supergraph "supergraph.yaml"  
+  * ddn context set subgraph "http/subgraph.yaml"  
+  * cp .env .env.staging  
+  * ddn context set localEnvFile ".env.staging"  
+  * ddn project init ddn-todo-bicevida-staging \--env-file-name ".env.staging.cloud"  
+  * ddn supergraph build create  
+    * Note down the \<build-version\> from the output  
+  * ddn supergraph build apply \<build-version\>  
+  * ddn console  
+  * Explore the staging project on the console  
+  * Create a service account from project settings and save the token  
+    * Name: cicd  
+    * Copy token and save it safely  
+    * Set access level ‘Admin’  
+    * Create a github secret with name ‘HASURA\_STAGING\_PAT’
+
+* Create a project for prod  
+  * ddn context create-context prod  
+  * ddn context set supergraph "supergraph.yaml"  
+  * ddn context set subgraph "http/subgraph.yaml"  
+  * cp .env .env.prod  
+  * ddn context set localEnvFile ".env.prod"  
+  * ddn project init ddn-todo-bicevida-prod \--env-file-name ".env.prod.cloud"  
+  * ddn supergraph build create  
+    * Note down the \<build-version\> from the output  
+  * ddn supergraph build apply \<build-version\>  
+  * ddn console  
+  * Explore the prod project on the console  
+  * Create a service account from project settings and save the token  
+    * Name: cicd  
+    * Copy token and save it safely  
+    * Set access level ‘Admin’  
+    * Create a github secret with name ‘HASURA\_PROD\_PAT’
+
+* Create Github actions  
+  * Build subgraph and apply to latest supergraph build  
+    * Copy cicd/appy-http.yaml from this github repo to .github/worflows in your ddn-todo-bicevida repo in your main branch and sync to dev branch  
+  * Build supergraph and apply to development project api  
+    * Copy cicd/deploy-dev.yaml from this github repo to .github/worflows in your ddn-todo-bicevida repo in your main branch and sync to dev branch  
+  * Build supergraph and apply to staging project api  
+    * Copy cicd/deploy-staging.yaml from this github repo to .github/worflows in your ddn-todo-bicevida repo in your main branch and sync to staging branch  
+  * Build supergraph and apply to prod project api  
+    * Copy cicd/deploy-prod.yaml from this github repo to .github/worflows in your ddn-todo-bicevida repo in your main branch and sync to prod branch  
+      
+
+**CI/CD Pipeline Exercises**
+
+* Run apply-http.yaml workflow from github ui or trigger a git push from dev branch after making some changes under http in dev branch  
+  * Notice the new subgraph build created for http subgraph on development project ddn console  
+  * Notice the new supergraph build created on development project ddn console  
+  * You can run the build api on ddn console to test any changes you made  
+* Run deploy-dev.yaml workflow from github ui or trigger a git push from dev branch after making some changes in dev branch  
+  * Notice the new supergraph build created on development project ddn console  
+  * Notice that this build also has been applied to the development project api  
+  * Explore the project api to verify any changes made  
+* Run deploy-staging.yaml workflow from github ui or create a pull request from main to  staging branch after some changes  
+  * Notice the new supergraph build created on staging project ddn console  
+  * Notice that this build also has been applied to the staging project api  
+  * Explore the project api to verify any changes  
+* Run deploy-prod.yaml workflow from github ui or create a pull request from main to  prod branch after some changes  
+  * Notice the new supergraph build created on prod project ddn console  
+  * Notice that this build also has been applied to the prod project api  
+  * Explore the project api to verify any changes
+
+**Documentation**
 
 * DDN Quick start guide  
   [https://hasura.io/docs/3.0/quickstart/](https://hasura.io/docs/3.0/quickstart/)  
@@ -175,6 +266,16 @@ Documentation
   [https://github.com/hasura/ndc-nodejs-lambda/](https://github.com/hasura/ndc-nodejs-lambda/)   
   [https://hasura.io/blog/introducing-typescript-functions-on-hasura-ddn](https://hasura.io/blog/introducing-typescript-functions-on-hasura-ddn)   
     
+* DDN Projects and CI/CD Pipelines  
+  [https://hasura.io/docs/3.0/project-configuration/overview/](https://hasura.io/docs/3.0/project-configuration/overview/)   
+  [https://hasura.io/docs/3.0/project-configuration/tutorials/manage-multiple-environments](https://hasura.io/docs/3.0/project-configuration/tutorials/manage-multiple-environments)   
+  [https://hasura.io/docs/3.0/project-configuration/tutorials/work-with-multiple-subgraphs](https://hasura.io/docs/3.0/project-configuration/tutorials/work-with-multiple-subgraphs)   
+  [https://hasura.io/docs/3.0/project-configuration/tutorials/work-with-multiple-repositories](https://hasura.io/docs/3.0/project-configuration/tutorials/work-with-multiple-repositories)   
+  [https://hasura.io/docs/3.0/project-configuration/project-management/manage-contexts](https://hasura.io/docs/3.0/project-configuration/project-management/manage-contexts)   
+  [https://hasura.io/docs/3.0/project-configuration/project-management/manage-collaborators](https://hasura.io/docs/3.0/project-configuration/project-management/manage-collaborators)   
+  [https://hasura.io/docs/3.0/project-configuration/project-management/service-accounts](https://hasura.io/docs/3.0/project-configuration/project-management/service-accounts)   
+  [https://hasura.io/docs/3.0/deployment/hasura-ddn/ci-cd/](https://hasura.io/docs/3.0/deployment/hasura-ddn/ci-cd/)   
+  [https://github.com/hasura/ddn-deployment/](https://github.com/hasura/ddn-deployment/)   
     
     
     

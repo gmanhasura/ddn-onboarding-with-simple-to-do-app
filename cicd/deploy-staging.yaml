@@ -1,0 +1,34 @@
+on:
+  push:
+    branches:
+      - staging
+  pull_request:
+    branches:
+      - staging
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install and Login to DDN CLI
+        uses: hasura/ddn-deployment@2.3.0
+        with:
+          hasura-pat: ${{ secrets.HASURA_STAGING_PAT}}
+
+      - name: Set the context 
+        run: |
+          ddn context set-current-context staging
+
+      - name: Build supergraph
+        run: |
+          ddn supergraph build create --description "Build for commit ${{ github.sha }}" | tee output.txt
+          VERSION=$(awk -F '|' '/Build Version/ { gsub(/^[ \t]+|[ \t]+$/, "", $3); print $3 }' output.txt)
+          echo "BUILD_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Supergraph Build version: $VERSION"
+
+      - name: Apply supergraph build
+        run: ddn supergraph build apply $BUILD_VERSION

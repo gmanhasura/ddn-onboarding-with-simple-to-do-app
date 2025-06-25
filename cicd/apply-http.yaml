@@ -1,0 +1,53 @@
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - 'http/**' 
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - 'http/**' 
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install and Login to DDN CLI
+        uses: hasura/ddn-deployment@2.3.0
+        with:
+          hasura-pat: ${{ secrets.HASURA_DEV_PAT}}
+
+      - name: Set the context 
+        run: | 
+          ddn context set-current-context default
+          ddn context set subgraph ./http/subgraph.yaml
+
+      - name: Build subgraph and extract version
+        id: build_subgraph
+        run: |
+          ddn subgraph build create | tee subgraph_output.txt
+          VERSION=$(awk -F '|' '/Build Version/ { gsub(/^[ \t]+|[ \t]+$/, "", $3); print $3 }' subgraph_output.txt)
+          echo "SUBGRAPH_BUILD_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Subgraph build version: $VERSION"
+
+      - name: Get latest Supergraph Build Version
+        id: get_supergraph
+        run: |
+          OUTPUT=$(ddn supergraph build get)
+          echo "$OUTPUT" > sg_output.txt
+          VERSION=$(awk -F '|' '/^\|/ && $2 ~ /BUILD VERSION/ {getline; getline; gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}' sg_output.txt)
+          echo "LATEST_SUPERGRAPH_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Found latest supergraph build version: $VERSION"
+
+      - name: Apply Subgraph to Supergraph
+        run: |
+          echo "Applying subgraph $SUBGRAPH_BUILD_VERSION to supergraph $LATEST_SUPERGRAPH_VERSION"
+          ddn supergraph build create \
+            --subgraph-version http:$SUBGRAPH_BUILD_VERSION \
+            --base-supergraph-version $LATEST_SUPERGRAPH_VERSION
