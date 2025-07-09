@@ -1,0 +1,159 @@
+connectors:
+  spanmetrics:
+    aggregation_temporality: AGGREGATION_TEMPORALITY_DELTA
+    dimensions:
+      - name: http.host
+    exclude_dimensions:
+      - span.kind
+    exemplars:
+      enabled: true
+    metrics_flush_interval: 15s
+exporters:
+  datadog:
+    api:
+      key: '${env:DD_API_KEY}'
+      site: datadoghq.com
+  googlemanagedprometheus:
+    metric:
+      compression: gzip
+      resource_filters:
+        - regex: .*
+    project: '${env:GMP_METRICS_PROJECT}'
+    timeout: 60s
+  otlphttp/oauth:
+    auth:
+      authenticator: oauth2client
+    endpoint: '${env:OTLP_GATEWAY_ENDPOINT}'
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_elapsed_time: 300s
+      max_interval: 30s
+    timeout: 60s
+extensions:
+  file_storage/otc:
+    compaction:
+      directory: /etc/otel-collector/buffer
+      on_rebound: true
+      on_start: true
+    directory: /etc/otel-collector/buffer
+  oauth2client:
+    client_id: '${env:DDN_OAUTH_CLIENT_ID}'
+    client_secret: '${env:DDN_OAUTH_CLIENT_SECRET}'
+    endpoint_params:
+      audience: ddn.hasura.io
+    scopes:
+      - 'opentelemetry:write'
+    token_url: '${env:DDN_OAUTH_URL}'
+processors:
+  attributes/ddn_id:
+    actions:
+      - action: insert
+        key: ddn.id
+        value: '${env:DDN_ID}'
+  batch:
+    send_batch_size: 100000
+    timeout: 2s
+  filter/denyhealth:
+    traces:
+      span:
+        - 'attributes["http.route"] == "/api/v1/{datasourceName}/health"'
+        - >-
+          attributes["http.route"] == "/healthz" and
+          resource.attributes["service.name"] == "ddn-auth-webhook"
+  groupbyattrs:
+    keys:
+      - namespace
+      - cluster
+      - location
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 95
+    spike_limit_percentage: 20
+  resource:
+    attributes:
+      - action: upsert
+        key: ddn.id
+        value: '${env:DDN_ID}'
+      - action: upsert
+        key: ddn.region
+        value: '${env:DDN_REGION}'
+      - action: upsert
+        key: cluster
+        value: '${env:DDN_ID}-${env:DDN_REGION}'
+      - action: upsert
+        key: ddn.kind
+        value: private
+      - action: upsert
+        key: location
+        value: us-central1
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: '0.0.0.0:4317'
+      http:
+        endpoint: '0.0.0.0:4318'
+  prometheus:
+    config: {}
+    target_allocator:
+      collector_id: '${POD_NAME}'
+      endpoint: 'http://otlp-collector-opentelemetry-targetallocator:80'
+      interval: 30s
+service:
+  extensions:
+    - oauth2client
+    - file_storage/otc
+  pipelines:
+    logs:
+      exporters:
+        - otlphttp/oauth
+      processors:
+        - memory_limiter
+        - attributes/ddn_id
+        - resource
+        - batch
+      receivers:
+        - otlp
+    metrics:
+      exporters:
+        - otlphttp/oauth
+      receivers:
+        - spanmetrics
+    metrics/prometheus:
+      exporters:
+        - googlemanagedprometheus
+      processors:
+        - memory_limiter
+        - resource
+        - groupbyattrs
+      receivers:
+        - prometheus
+    traces/spanmetrics:
+      exporters:
+        - spanmetrics
+      receivers:
+        - otlp
+    traces/synctraces:
+      exporters:
+        - otlphttp/oauth
+        - datadog
+      processors:
+        - memory_limiter
+        - attributes/ddn_id
+        - filter/denyhealth
+        - resource
+        - batch
+      receivers:
+        - otlp
+  telemetry:
+    logs:
+      encoding: json
+    metrics:
+      readers:
+        - pull:
+            exporter:
+              prometheus:
+                host: 0.0.0.0
+                port: 8888
+

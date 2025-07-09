@@ -238,6 +238,38 @@
   * Notice that this build also has been applied to the prod project api  
   * Explore the project api to verify any changes
 
+**Observability setup with Datadog**
+
+* Local Testing  
+  * Example files config.yaml and otel-collector-config.yaml are included in observability/otel-collector/local folder  
+  * Changes to .env file in your local project  
+    * Add environment variable DD\_API\_KEY=\<your-datadog-api-key\>  
+  * Changes to compose.yaml file in your local project  
+    * Change the otel-collector image to use otel/opentelemetry-collector-contrib  
+    * Add the following under otel-collector environment   
+      * DD\_API\_KEY: ${DD\_API\_KEY}  
+  * Changes to otel-collector-config.yaml in your local project  
+    * Add data dog exporter   
+    * Add custom attributes for distinguishing DDN project traces in your datadog  
+      * [ddn.id](http://ddn.id)\=\<your-data-plane-id\>  
+      * Any other custom attributes you find useful  
+    * Optional: add spanmetrics connector if you want to generate metrics out of spans in otel collector  
+  * Restart the otel collector  
+    * You should see the log message “API key validation successful”  
+* Explore traces in datadog trace explorer  
+  * Example filter to use:  
+    resource\_name:execute\_query   
+    \-@operation\_name:IntrospectionQuery   
+    @[ddn.id](http://ddn.id):\<your-dataplane-id\>  
+* Generate metrics out of traces in datadog  
+  * Follow the data dog doc: [https://docs.datadoghq.com/tracing/trace\_pipeline/generate\_metrics/](https://docs.datadoghq.com/tracing/trace_pipeline/generate_metrics/)   
+      
+* Hasura Cloud  
+  * File a support ticket by sending email to [support@hasura.io](mailto:support@hasura.io) or using zendesk portal [https://support.hasura.io/hc/en-us/requests/new](https://support.hasura.io/hc/en-us/requests/new) with the following information  
+    * Datadog site for your organization (ex:- [datadoghq.com](http://datadoghq.com),  [us3.datadoghq.com](http://us3.datadoghq.com), etc)  
+    * Datadog api key  
+    * Any other custom configuration for the otel collector (see an example otel collector configuration used by our SRE team in the file observability/otel-collector/cloud/otel-collector-config.yaml. 
+
 **Documentation**
 
 * DDN Quick start guide  
@@ -276,6 +308,15 @@
   [https://hasura.io/docs/3.0/project-configuration/project-management/service-accounts](https://hasura.io/docs/3.0/project-configuration/project-management/service-accounts)   
   [https://hasura.io/docs/3.0/deployment/hasura-ddn/ci-cd/](https://hasura.io/docs/3.0/deployment/hasura-ddn/ci-cd/)   
   [https://github.com/hasura/ddn-deployment/](https://github.com/hasura/ddn-deployment/)   
+    
+* Observability  
+  [https://hasura.io/docs/3.0/observability/overview/](https://hasura.io/docs/3.0/observability/overview/)   
+  [https://opentelemetry.io/docs/collector/](https://opentelemetry.io/docs/collector/)   
+  [https://docs.datadoghq.com/opentelemetry/setup/collector\_exporter/](https://docs.datadoghq.com/opentelemetry/setup/collector_exporter/)   
+  [https://last9.io/blog/convert-opentelemetry-traces-to-metrics-using-spanconnector/](https://last9.io/blog/convert-opentelemetry-traces-to-metrics-using-spanconnector/)   
+  [https://docs.datadoghq.com/tracing/trace\_pipeline/generate\_metrics/](https://docs.datadoghq.com/tracing/trace_pipeline/generate_metrics/)   
+  [https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/observability/enterprise](https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/observability/enterprise)   
+    
     
     
     

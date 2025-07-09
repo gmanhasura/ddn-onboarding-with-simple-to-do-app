@@ -1,0 +1,75 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+connectors:
+  spanmetrics:
+    exemplars:
+      enabled: true
+    exclude_dimensions: ['span.kind']
+    metrics_flush_interval: 15s
+    aggregation_temporality: 'AGGREGATION_TEMPORALITY_DELTA'
+    dimensions:
+      - name: operation_name
+      - name: request.graphql_query
+      - name: role
+
+processors:
+  batch: {}
+  transform:
+    metric_statements: &statements
+      - context: resource
+        statements:
+          - set(attributes["ddn.id"], "ddn-todo-bicevida")
+    trace_statements: *statements # Use the same statements as in metrics
+    log_statements: *statements # Use the same statements as in metrics
+  metricstransform:
+    transforms:
+      - include: traces.span.metrics.calls
+        match_type: regexp
+        action: update
+        new_name: bicevida_spanmetrics_graphql_requests_total
+      - include: traces.span.metrics.duration
+        match_type: regexp
+        action: update
+        new_name: bicevida_spanmetrics_graphql_request_latency 
+   
+exporters:
+  otlp:
+    endpoint: https://gateway.otlp.hasura.io:443
+    headers:
+      Authorization: pat ${env:HASURA_DDN_PAT}
+  datadog:
+    api:
+      site: datadoghq.com
+      key: ${env:DD_API_KEY}
+  debug: 
+    verbosity: detailed 
+
+
+service:
+  pipelines:
+    traces:
+      receivers:
+        - otlp
+      processors:
+        - transform
+        - batch 
+      exporters:
+        - otlp 
+        - datadog
+        - spanmetrics
+    metrics:
+      receivers:
+        - spanmetrics
+      processors:
+        - metricstransform
+        - batch
+      exporters:
+        - otlp
+        - datadog
+        - debug
