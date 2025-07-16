@@ -1,0 +1,31 @@
+---
+kind: Command
+version: v1
+definition:
+  name: GetUsersGetTodosByUserUsersUserIdTodosGet
+  outputType: "[TodoRead!]!"
+  arguments:
+    - name: headers
+      type: Json
+    - name: userId
+      type: Float!
+  source:
+    dataConnectorName: todoopen
+    dataConnectorCommand:
+      function: getUsersGetTodosByUserUsersUserIdTodosGet
+  graphql:
+    rootFieldName: openapi_getUsersGetTodosByUserUsersUserIdTodosGet
+    rootFieldKind: Query
+  description: Get Todos By User
+
+---
+kind: CommandPermissions
+version: v1
+definition:
+  commandName: GetUsersGetTodosByUserUsersUserIdTodosGet
+  permissions:
+    - role: admin
+      allowExecution: true
+    - role: openuser
+      allowExecution: true
+

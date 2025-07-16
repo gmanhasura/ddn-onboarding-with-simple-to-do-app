@@ -1,0 +1,50 @@
+kind: AuthConfig
+version: v4
+definition:
+  mode:
+    noAuth:
+      role: admin
+      sessionVariables: {}
+  alternativeModes: 
+    - identifier: postgres
+      config: 
+        webhook:
+          url:
+            valueFromEnv: POSTGRES_SUBGRAPH_AUTH_WEBHOOK_URL
+          method: POST
+          customHeadersConfig: 
+            body: 
+              headers: 
+                forward: "*"
+            headers: 
+              additional: 
+                user-agent: "Hasura DDN"
+    - identifier: openapi
+      config:
+        jwt:
+          claimsConfig:
+            namespace:
+              claimsFormat: Json
+              location: "/https:~1~1hasura.io~1jwt~1claims"
+          key:
+            fixed:
+              algorithm: HS256
+              key:
+                valueFromEnv: OPENAPI_SUBGRAPH_JWT_SECRET_KEY
+          tokenLocation:
+            type: Header
+            name: Auth-Token
+    - identifier: http
+      config:
+        jwt:
+          claimsConfig:
+            namespace:
+              claimsFormat: Json
+              location: "/https:~1~1hasura.io~1jwt~1claims"
+          key:
+            fixed:
+              algorithm: HS256
+              key:
+                valueFromEnv: HTTP_SUBGRAPH_JWT_SECRET_KEY
+          tokenLocation:
+            type: BearerAuthorization

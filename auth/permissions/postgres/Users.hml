@@ -1,0 +1,239 @@
+---
+kind: ObjectType
+version: v1
+definition:
+  name: Users
+  fields:
+    - name: country
+      type: String_1
+    - name: createdAt
+      type: Timestamptz!
+    - name: email
+      type: String_1!
+    - name: id
+      type: Int32!
+    - name: isOnline
+      type: Boolean_1!
+    - name: name
+      type: String_1!
+    - name: password
+      type: String_1!
+    - name: updatedAt
+      type: Timestamptz!
+  graphql:
+    typeName: Postgres_Users
+    inputTypeName: Postgres_UsersInput
+  dataConnectorTypeMapping:
+    - dataConnectorName: todopg
+      dataConnectorObjectType: users
+      fieldMapping:
+        country:
+          column:
+            name: country
+        createdAt:
+          column:
+            name: created_at
+        email:
+          column:
+            name: email
+        id:
+          column:
+            name: id
+        isOnline:
+          column:
+            name: is_online
+        name:
+          column:
+            name: name
+        password:
+          column:
+            name: password
+        updatedAt:
+          column:
+            name: updated_at
+
+---
+kind: TypePermissions
+version: v1
+definition:
+  typeName: Users
+  permissions:
+    - role: admin
+      output:
+        allowedFields:
+          - country
+          - createdAt
+          - email
+          - id
+          - isOnline
+          - name
+          - password
+          - updatedAt
+    - role: pguser
+      output:
+        allowedFields:
+          - country
+          - email
+          - id
+          - isOnline
+          - name
+
+---
+kind: BooleanExpressionType
+version: v1
+definition:
+  name: UsersBoolExp
+  operand:
+    object:
+      type: Users
+      comparableFields:
+        - fieldName: country
+          booleanExpressionType: VarcharBoolExp
+        - fieldName: createdAt
+          booleanExpressionType: TimestamptzBoolExp
+        - fieldName: email
+          booleanExpressionType: TextBoolExp
+        - fieldName: id
+          booleanExpressionType: Int4BoolExp
+        - fieldName: isOnline
+          booleanExpressionType: BoolBoolExp
+        - fieldName: name
+          booleanExpressionType: TextBoolExp
+        - fieldName: password
+          booleanExpressionType: TextBoolExp
+        - fieldName: updatedAt
+          booleanExpressionType: TimestamptzBoolExp
+      comparableRelationships:
+        - relationshipName: todos
+  logicalOperators:
+    enable: true
+  isNull:
+    enable: true
+  graphql:
+    typeName: Postgres_UsersBoolExp
+
+---
+kind: AggregateExpression
+version: v1
+definition:
+  name: UsersAggExp
+  operand:
+    object:
+      aggregatedType: Users
+      aggregatableFields:
+        - fieldName: country
+          aggregateExpression: VarcharAggExp
+        - fieldName: createdAt
+          aggregateExpression: TimestamptzAggExp
+        - fieldName: email
+          aggregateExpression: TextAggExp
+        - fieldName: id
+          aggregateExpression: Int4AggExp
+        - fieldName: isOnline
+          aggregateExpression: BoolAggExp
+        - fieldName: name
+          aggregateExpression: TextAggExp
+        - fieldName: password
+          aggregateExpression: TextAggExp
+        - fieldName: updatedAt
+          aggregateExpression: TimestamptzAggExp
+  count:
+    enable: true
+  graphql:
+    selectTypeName: Postgres_UsersAggExp
+
+---
+kind: OrderByExpression
+version: v1
+definition:
+  name: UsersOrderByExp
+  operand:
+    object:
+      orderedType: Users
+      orderableFields:
+        - fieldName: country
+          orderByExpression: String1OrderByExp
+        - fieldName: createdAt
+          orderByExpression: TimestamptzOrderByExp
+        - fieldName: email
+          orderByExpression: String1OrderByExp
+        - fieldName: id
+          orderByExpression: Int32OrderByExp
+        - fieldName: isOnline
+          orderByExpression: Boolean1OrderByExp
+        - fieldName: name
+          orderByExpression: String1OrderByExp
+        - fieldName: password
+          orderByExpression: String1OrderByExp
+        - fieldName: updatedAt
+          orderByExpression: TimestamptzOrderByExp
+      orderableRelationships: []
+  graphql:
+    expressionTypeName: Postgres_UsersOrderByExp
+
+---
+kind: Model
+version: v2
+definition:
+  name: Users
+  objectType: Users
+  source:
+    dataConnectorName: todopg
+    collection: users
+  filterExpressionType: UsersBoolExp
+  aggregateExpression: UsersAggExp
+  orderByExpression: UsersOrderByExp
+  graphql:
+    selectMany:
+      queryRootField: postgres_users
+      subscription:
+        rootField: postgres_users
+    selectUniques:
+      - queryRootField: postgres_usersById
+        uniqueIdentifier:
+          - id
+        subscription:
+          rootField: postgres_usersById
+    filterInputTypeName: Postgres_UsersFilterInput
+    aggregate:
+      queryRootField: postgres_usersAggregate
+      subscription:
+        rootField: postgres_usersAggregate
+
+---
+kind: ModelPermissions
+version: v1
+definition:
+  modelName: Users
+  permissions:
+    - role: admin
+      select:
+        filter: null
+        allowSubscriptions: true
+    - role: pguser
+      select:
+        filter: null
+        allowSubscriptions: true
+
+---
+kind: Relationship
+version: v1
+definition:
+  name: todos
+  sourceType: Users
+  target:
+    model:
+      name: Todos
+      relationshipType: Array
+      aggregate:
+        aggregateExpression: TodosAggExp
+  mapping:
+    - source:
+        fieldPath:
+          - fieldName: id
+      target:
+        modelField:
+          - fieldName: userId
+  graphql:
+    aggregateFieldName: todosAggregate
+

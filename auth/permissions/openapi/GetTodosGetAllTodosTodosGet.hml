@@ -1,0 +1,113 @@
+---
+kind: ObjectType
+version: v1
+definition:
+  name: TodoRead
+  description: TodoRead
+  fields:
+    - name: createdAt
+      type: String
+      description: Created At
+    - name: description
+      type: String
+      description: Description
+    - name: id
+      type: Float!
+      description: Id
+    - name: isCompleted
+      type: Boolean
+      description: Is Completed
+    - name: title
+      type: String
+      description: Title
+    - name: updatedAt
+      type: String
+      description: Updated At
+    - name: userId
+      type: Float
+      description: User Id
+  graphql:
+    typeName: OpenApi_TodoRead
+    inputTypeName: OpenApi_TodoReadInput
+  dataConnectorTypeMapping:
+    - dataConnectorName: todoopen
+      dataConnectorObjectType: TodoRead
+      fieldMapping:
+        createdAt:
+          column:
+            name: created_at
+        description:
+          column:
+            name: description
+        id:
+          column:
+            name: id
+        isCompleted:
+          column:
+            name: is_completed
+        title:
+          column:
+            name: title
+        updatedAt:
+          column:
+            name: updated_at
+        userId:
+          column:
+            name: user_id
+
+---
+kind: TypePermissions
+version: v1
+definition:
+  typeName: TodoRead
+  permissions:
+    - role: admin
+      output:
+        allowedFields:
+          - createdAt
+          - description
+          - id
+          - isCompleted
+          - title
+          - updatedAt
+          - userId
+    - role: openuser
+      output:
+        allowedFields:
+          - createdAt
+          - description
+          - id
+          - isCompleted
+          - title
+          - updatedAt
+          - userId
+
+---
+kind: Command
+version: v1
+definition:
+  name: GetTodosGetAllTodosTodosGet
+  outputType: "[TodoRead!]!"
+  arguments:
+    - name: headers
+      type: Json
+  source:
+    dataConnectorName: todoopen
+    dataConnectorCommand:
+      function: getTodosGetAllTodosTodosGet
+  graphql:
+    rootFieldName: openapi_getTodosGetAllTodosTodosGet
+    rootFieldKind: Query
+  description: Get All Todos
+
+---
+kind: CommandPermissions
+version: v1
+definition:
+  commandName: GetTodosGetAllTodosTodosGet
+  permissions:
+    - role: admin
+      allowExecution: true
+    - role: openuser
+      allowExecution: true
+

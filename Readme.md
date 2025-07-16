@@ -270,6 +270,87 @@
     * Datadog api key  
     * Any other custom configuration for the otel collector (see an example otel collector configuration used by our SRE team in the file observability/otel-collector/cloud/otel-collector-config.yaml. 
 
+**Authentication and Authorization Setup and Exercises**
+
+* Add authentication and authorization for postgres subgraph with webhook  
+  * Create webhook with nodejs and express   
+    * install nodejs (if you already dont have it)  
+      brew install node (on macbook)  
+    * mkdir auth-webhook  
+    * cd auth-webhook  
+    * npm init \-y  
+    * npm install express  
+    * Copy provided auth/webhook/[index.js](http://index.js) into this folder auth-webhook  
+    * node [index.js](http://index.js)  
+  * Configure alternate mode for postgres   
+    * Copy the yaml content for ‘postgres’ from the provided auth/auth-config.yaml into your globals/auth-config.yaml  
+  * Add the following in your .env file  
+    * POSTGRES\_SUBGRAPH\_AUTH\_WEBHOOK\_URL="[http://host.docker.internal:3000/authorize](http://host.docker.internal:3000/authorize)"  
+  * Add the following in your globals/subgraph.yaml under envMapping  
+    * POSTGRES\_SUBGRAPH\_AUTH\_WEBHOOK\_URL:  
+        fromEnv: POSTGRES\_SUBGRAPH\_AUTH\_WEBHOOK\_URL  
+  * Configure the authorization for ToDos and Users models  
+    * Copy the TypePermissions and CommandPermissions from the ToDos.hml and User.hml files under the provided folder auth/permissions/postgres into the corresponding files in your postgres subgraph metadata folder  
+  * ddn supergraph build local  
+  * ddn run docker-start  
+  * ddn console \--local  
+  * Configure headers DDN console  
+    * x-hasura-auth-mode=postgres  
+    * user-id=1 (or any other existing user id in your Users table)  
+  * You will notice that only graphql schema related to ToDos and Users model accessible for postgres user will be displayed   
+  * When you exercise queries for the Users table, you will see that only the columns you allowed under TypePermissions will be displayed and queryable  
+  * When you exercise queries for the ToDos table, you will see the entries belonging to only the user in user-id field and not other users.   
+      
+* Add authentication and authorization for openapi subgraph with JWT  
+  * Create a random 256 bit secret key and save it  
+    * openssl rand \-base64 32  
+    * Add the following in your .env file  
+      OPENAPI\_SUBGRAPH\_JWT\_SECRET\_KEY="\<your-secret-key\>"   
+    * Add the following in your globals/subgraph.yaml under envMapping  
+      OPENAPI\_SUBGRAPH\_JWT\_SECRET\_KEY:  
+            fromEnv: OPENAPI\_SUBGRAPH\_JWT\_SECRET\_KEY  
+  * Create a jwt token for the claims in the provided auth/jwt/openapi-jwt-claims.txt file  
+  * Configure alternate mode for openapi   
+    * Copy the yaml content for ‘openapi’ from the provided auth/auth-config.yaml into your globals/auth-config.yaml  
+  * Configure the authorization for some commands  
+    * Copy the TypePermissions and CommandPermissions from the following files under the provided folder auth/permissions/postgres into the corresponding files in your postgres subgraph metadata folder  
+      * GetTodosGetAllTodosTodosGet.hml			  
+      * GetUsersGetTodosByUserUsersUserIdTodosGet.hml  
+      * GetTodosReadTodoTodosTodoIdGet.hml  
+  * ddn supergraph build local  
+  * ddn run docker-start  
+  * ddn console \--local  
+  * Configure headers DDN console  
+    * x-hasura-auth-mode=openapi  
+    * Auth-Token=\<jwt-token-created-above\>  
+  * You will notice that only the commands where ‘openuser’ role has been given access are displayed on the graphql explorer   
+  * GraphQL queries involving the exposed schema should all succeed  
+      
+* Add authentication and authorization for http subgraph with JWT  
+  * Create a random 256 bit secret key and save it  
+    * openssl rand \-base64 32  
+    * Add the following in your .env file  
+      HTTP\_SUBGRAPH\_JWT\_SECRET\_KEY="\<your-secret-key\>"   
+    * Add the following in your globals/subgraph.yaml under envMapping  
+      HTTP\_SUBGRAPH\_JWT\_SECRET\_KEY:  
+            fromEnv: HTTP\_SUBGRAPH\_JWT\_SECRET\_KEY  
+  * Create a jwt token for the claims in the provided auth/jwt/http-jwt-claims.txt file  
+  * Configure alternate mode for http   
+    * Copy the yaml content for ‘httpi’ from the provided auth/auth-config.yaml into your globals/auth-config.yaml  
+  * Configure the authorization for some commands  
+    * Copy the TypePermissions and CommandPermissions from the following files under the provided folder auth/permissions/postgres into the corresponding files in your postgres subgraph metadata folder  
+      * GetAllTodosTodosGet.hml			  
+      * ReadTodoTodosTodoIdGet.hml  
+      * GetTodosByUserUsersUserIdTodosGet.hml  
+  * ddn supergraph build local  
+  * ddn run docker-start  
+  * ddn console \--local  
+  * Configure headers DDN console  
+    * x-hasura-auth-mode=http  
+    * Authorization=Bearer \<jwt-token-created-above\>  
+  * You will notice that only the commands where ‘httpuser’ role has been given access are displayed on the graphql explorer   
+  * GraphQL queries involving the exposed schema should all succeed
+
 **Documentation**
 
 * DDN Quick start guide  
@@ -315,7 +396,14 @@
   [https://docs.datadoghq.com/opentelemetry/setup/collector\_exporter/](https://docs.datadoghq.com/opentelemetry/setup/collector_exporter/)   
   [https://last9.io/blog/convert-opentelemetry-traces-to-metrics-using-spanconnector/](https://last9.io/blog/convert-opentelemetry-traces-to-metrics-using-spanconnector/)   
   [https://docs.datadoghq.com/tracing/trace\_pipeline/generate\_metrics/](https://docs.datadoghq.com/tracing/trace_pipeline/generate_metrics/)   
-  [https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/observability/enterprise](https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/observability/enterprise)   
+  [https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/observability/enterprise](https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/observability/enterprise) 
+
+* Authentication and Authorization  
+  [https://hasura.io/docs/3.0/auth/overview/](https://hasura.io/docs/3.0/auth/overview/)   
+  [https://hasura.io/docs/3.0/reference/metadata-reference/auth-config](https://hasura.io/docs/3.0/reference/metadata-reference/auth-config)   
+  [https://hasura.io/docs/3.0/auth/permissions](https://hasura.io/docs/3.0/auth/permissions)    
+  [https://hasura.io/docs/3.0/reference/metadata-reference/permissions](https://hasura.io/docs/3.0/reference/metadata-reference/permissions)   
+     
     
     
     

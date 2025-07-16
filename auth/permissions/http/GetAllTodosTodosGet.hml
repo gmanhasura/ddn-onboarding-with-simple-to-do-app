@@ -1,0 +1,102 @@
+---
+kind: ObjectType
+version: v1
+definition:
+  name: TodoRead
+  fields:
+    - name: createdAt
+      type: Timestamptz
+    - name: description
+      type: String
+    - name: id
+      type: Int32!
+    - name: isCompleted
+      type: Boolean
+    - name: title
+      type: String
+    - name: updatedAt
+      type: Timestamptz
+    - name: userId
+      type: Int32
+  graphql:
+    typeName: Http_TodoRead
+    inputTypeName: Http_TodoReadInput
+  dataConnectorTypeMapping:
+    - dataConnectorName: todohttp
+      dataConnectorObjectType: TodoRead
+      fieldMapping:
+        createdAt:
+          column:
+            name: created_at
+        description:
+          column:
+            name: description
+        id:
+          column:
+            name: id
+        isCompleted:
+          column:
+            name: is_completed
+        title:
+          column:
+            name: title
+        updatedAt:
+          column:
+            name: updated_at
+        userId:
+          column:
+            name: user_id
+
+---
+kind: TypePermissions
+version: v1
+definition:
+  typeName: TodoRead
+  permissions:
+    - role: admin
+      output:
+        allowedFields:
+          - createdAt
+          - description
+          - id
+          - isCompleted
+          - title
+          - updatedAt
+          - userId
+    - role: httpuser
+      output:
+        allowedFields:
+          - createdAt
+          - description
+          - id
+          - isCompleted
+          - title
+          - updatedAt
+          - userId
+    
+
+---
+kind: Command
+version: v1
+definition:
+  name: GetAllTodosTodosGet
+  outputType: "[TodoRead!]!"
+  source:
+    dataConnectorName: todohttp
+    dataConnectorCommand:
+      function: get_all_todos_todos__get
+  graphql:
+    rootFieldName: http_getAllTodosTodosGet
+    rootFieldKind: Query
+  description: Get All Todos
+
+---
+kind: CommandPermissions
+version: v1
+definition:
+  commandName: GetAllTodosTodosGet
+  permissions:
+    - role: admin
+      allowExecution: true
+    - role: httpuser
+      allowExecution: true

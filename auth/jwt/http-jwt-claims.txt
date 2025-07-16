@@ -1,0 +1,12 @@
+{
+  "exp": 1784005527,
+  "https://hasura.io/jwt/claims": {
+    "x-hasura-allowed-roles": [
+      "admin",
+      "httpuser",
+    ],
+    "x-hasura-default-role": "httpuser",
+  },
+  "iat": 1752469486
+}
+

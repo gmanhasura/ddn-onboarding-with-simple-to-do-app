@@ -1,0 +1,293 @@
+---
+kind: ObjectType
+version: v1
+definition:
+  name: Todos
+  fields:
+    - name: createdAt
+      type: Timestamp
+    - name: description
+      type: String_1
+    - name: id
+      type: Int32!
+    - name: isCompleted
+      type: Boolean_1
+    - name: title
+      type: String_1
+    - name: updatedAt
+      type: Timestamp
+    - name: userId
+      type: Int32
+  graphql:
+    typeName: Postgres_Todos
+    inputTypeName: Postgres_TodosInput
+  dataConnectorTypeMapping:
+    - dataConnectorName: todopg
+      dataConnectorObjectType: todos
+      fieldMapping:
+        createdAt:
+          column:
+            name: created_at
+        description:
+          column:
+            name: description
+        id:
+          column:
+            name: id
+        isCompleted:
+          column:
+            name: is_completed
+        title:
+          column:
+            name: title
+        updatedAt:
+          column:
+            name: updated_at
+        userId:
+          column:
+            name: user_id
+
+---
+kind: TypePermissions
+version: v1
+definition:
+  typeName: Todos
+  permissions:
+    - role: admin
+      output:
+        allowedFields:
+          - createdAt
+          - description
+          - id
+          - isCompleted
+          - title
+          - updatedAt
+          - userId
+    - role: pguser
+      output:
+        allowedFields:
+          - createdAt
+          - description
+          - id
+          - isCompleted
+          - title
+          - updatedAt
+          - userId
+
+---
+kind: BooleanExpressionType
+version: v1
+definition:
+  name: TodosBoolExp
+  operand:
+    object:
+      type: Todos
+      comparableFields:
+        - fieldName: createdAt
+          booleanExpressionType: TimestampBoolExp
+        - fieldName: description
+          booleanExpressionType: TextBoolExp
+        - fieldName: id
+          booleanExpressionType: Int4BoolExp
+        - fieldName: isCompleted
+          booleanExpressionType: BoolBoolExp
+        - fieldName: title
+          booleanExpressionType: VarcharBoolExp
+        - fieldName: updatedAt
+          booleanExpressionType: TimestampBoolExp
+        - fieldName: userId
+          booleanExpressionType: Int4BoolExp
+      comparableRelationships:
+        - relationshipName: user
+  logicalOperators:
+    enable: true
+  isNull:
+    enable: true
+  graphql:
+    typeName: Postgres_TodosBoolExp
+
+---
+kind: AggregateExpression
+version: v1
+definition:
+  name: TodosAggExp
+  operand:
+    object:
+      aggregatedType: Todos
+      aggregatableFields:
+        - fieldName: createdAt
+          aggregateExpression: TimestampAggExp
+        - fieldName: description
+          aggregateExpression: TextAggExp
+        - fieldName: id
+          aggregateExpression: Int4AggExp
+        - fieldName: isCompleted
+          aggregateExpression: BoolAggExp
+        - fieldName: title
+          aggregateExpression: VarcharAggExp
+        - fieldName: updatedAt
+          aggregateExpression: TimestampAggExp
+        - fieldName: userId
+          aggregateExpression: Int4AggExp
+  count:
+    enable: true
+  graphql:
+    selectTypeName: Postgres_TodosAggExp
+
+---
+kind: OrderByExpression
+version: v1
+definition:
+  name: TodosOrderByExp
+  operand:
+    object:
+      orderedType: Todos
+      orderableFields:
+        - fieldName: createdAt
+          orderByExpression: TimestampOrderByExp
+        - fieldName: description
+          orderByExpression: String1OrderByExp
+        - fieldName: id
+          orderByExpression: Int32OrderByExp
+        - fieldName: isCompleted
+          orderByExpression: Boolean1OrderByExp
+        - fieldName: title
+          orderByExpression: String1OrderByExp
+        - fieldName: updatedAt
+          orderByExpression: TimestampOrderByExp
+        - fieldName: userId
+          orderByExpression: Int32OrderByExp
+      orderableRelationships:
+        - relationshipName: user
+  graphql:
+    expressionTypeName: Postgres_TodosOrderByExp
+
+---
+kind: Model
+version: v2
+definition:
+  name: Todos
+  objectType: Todos
+  source:
+    dataConnectorName: todopg
+    collection: todos
+  filterExpressionType: TodosBoolExp
+  aggregateExpression: TodosAggExp
+  orderByExpression: TodosOrderByExp
+  graphql:
+    selectMany:
+      queryRootField: postgres_todos
+      subscription:
+        rootField: postgres_todos
+    selectUniques:
+      - queryRootField: postgres_todosById
+        uniqueIdentifier:
+          - id
+        subscription:
+          rootField: postgres_todosById
+    filterInputTypeName: Postgres_TodosFilterInput
+    aggregate:
+      queryRootField: postgres_todosAggregate
+      subscription:
+        rootField: postgres_todosAggregate
+
+---
+kind: ModelPermissions
+version: v1
+definition:
+  modelName: Todos
+  permissions:
+    - role: admin
+      select:
+        filter: null
+        allowSubscriptions: true
+    - role: pguser
+      select:
+        filter:
+          fieldComparison:
+            field: userId
+            operator: _eq
+            value: 
+              sessionVariable: x-hasura-user-id
+        allowSubscriptions: true
+    
+
+---
+kind: Relationship
+version: v1
+definition:
+  name: user
+  sourceType: Todos
+  target:
+    model:
+      name: Users
+      relationshipType: Object
+  mapping:
+    - source:
+        fieldPath:
+          - fieldName: userId
+      target:
+        modelField:
+          - fieldName: id
+
+
+# ---
+# kind: Relationship
+# version: v1
+# definition:
+#   name: title_caps
+#   sourceType:  Todos
+#   target:
+#     command:
+#       subgraph: blogic
+#       name: Capitalise
+#   mapping:
+#     - source:
+#         fieldPath:
+#           - fieldName: title
+#       target:
+#         argument:
+#           argumentName:  text
+
+
+# ---
+# kind: Relationship
+# version: v1
+# definition:
+#   name: formattedCreatedAt
+#   sourceType: Todos
+#   target:
+#     command:
+#       subgraph: blogic
+#       name: FormatDate
+#   mapping:
+#     - source:
+#         fieldPath:
+#           - fieldName: createdAt
+#       target:
+#         argument:
+#           argumentName: timestamp
+    # -  source: 
+    #      value:  
+    #        literal: "DD/MM/YYYY"
+    #    target: 
+    #      argument:
+    #        argumentName: format
+
+---
+kind: Relationship
+version: v1
+definition:
+  name: title_ts
+  sourceType: Todos
+  target:
+    command:
+      subgraph: blogic
+      name: TranslateText
+  mapping:
+    - source:
+        fieldPath:
+          - fieldName: title
+      target:
+        argument:
+          argumentName: content

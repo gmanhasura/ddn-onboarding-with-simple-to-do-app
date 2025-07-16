@@ -1,0 +1,50 @@
+---
+kind: Command
+version: v1
+definition:
+  name: ReadTodoTodosTodoIdGet
+  outputType: TodoRead!
+  arguments:
+    - name: todoId
+      type: Int32!
+  source:
+    dataConnectorName: todohttp
+    dataConnectorCommand:
+      function: read_todo_todos__todo_id__get
+    argumentMapping:
+      todoId: todo_id
+  graphql:
+    rootFieldName: http_readTodoTodosTodoIdGet
+    rootFieldKind: Query
+  description: Read Todo
+
+
+---
+kind: CommandPermissions
+version: v1
+definition:
+  commandName: ReadTodoTodosTodoIdGet
+  permissions:
+    - role: admin
+      allowExecution: true
+    - role: httpuser
+      allowExecution: true
+
+
+---
+kind: Relationship
+version: v1
+definition:
+  name: user
+  sourceType: TodoRead
+  target:
+    command:
+      name: ReadUserUsersUserIdGet
+  mapping:
+    - source:
+        fieldPath:
+          - fieldName: userId
+      target:
+        argument:
+          argumentName: userId
+

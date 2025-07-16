@@ -1,0 +1,31 @@
+---
+kind: Command
+version: v1
+definition:
+  name: GetTodosByUserUsersUserIdTodosGet
+  outputType: "[TodoRead!]!"
+  arguments:
+    - name: userId
+      type: Int32!
+  source:
+    dataConnectorName: todohttp
+    dataConnectorCommand:
+      function: get_todos_by_user_users__user_id__todos_get
+    argumentMapping:
+      userId: user_id
+  graphql:
+    rootFieldName: http_getTodosByUserUsersUserIdTodosGet
+    rootFieldKind: Query
+  description: Get Todos By User
+
+---
+kind: CommandPermissions
+version: v1
+definition:
+  commandName: GetTodosByUserUsersUserIdTodosGet
+  permissions:
+    - role: admin
+      allowExecution: true
+    - role: httpuser
+      allowExecution: true
+

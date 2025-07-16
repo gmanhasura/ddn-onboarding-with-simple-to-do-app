@@ -1,0 +1,83 @@
+---
+kind: Command
+version: v1
+definition:
+  name: GetTodosReadTodoTodosTodoIdGet
+  outputType: TodoRead!
+  arguments:
+    - name: headers
+      type: Json
+    - name: todoId
+      type: Float!
+  source:
+    dataConnectorName: todoopen
+    dataConnectorCommand:
+      function: getTodosReadTodoTodosTodoIdGet
+  graphql:
+    rootFieldName: openapi_getTodosReadTodoTodosTodoIdGet
+    rootFieldKind: Query
+  description: Read Todo
+
+---
+kind: CommandPermissions
+version: v1
+definition:
+  commandName: GetTodosReadTodoTodosTodoIdGet
+  permissions:
+    - role: admin
+      allowExecution: true
+    - role: openuser
+      allowExecution: true
+
+---
+kind: Relationship
+version: v1
+definition:
+  name: user
+  sourceType: TodoRead
+  target:
+    command:
+      name: GetUsersReadUserUsersUserIdGet
+  mapping:
+    - source:
+        fieldPath:
+          - fieldName: userId
+      target:
+        argument:
+          argumentName:  userId
+
+# ---
+# kind: Relationship
+# version: v1
+# definition:
+#   name: title_caps
+#   sourceType: TodoRead
+#   target:
+#     command:
+#       subgraph: blogic
+#       name: Capitalise
+#   mapping:
+#     - source:
+#         fieldPath:
+#           - fieldName: title 
+#       target:
+#         argument:
+#           argumentName: text
+
+# ---
+# kind: Relationship
+# version: v1
+# definition:
+#   name: formattedCreatedAt
+#   sourceType: TodoRead
+#   target:
+#     command:
+#       subgraph: blogic
+#       name: FormatDate
+#   mapping:
+#     - source:
+#         fieldPath:
+#           - fieldName: createdAt
+#       target:
+#         argument:
+#           argumentName: timestamp
